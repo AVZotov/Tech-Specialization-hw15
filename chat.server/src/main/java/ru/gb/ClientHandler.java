@@ -19,7 +19,7 @@ public class ClientHandler implements Runnable{
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.name = bufferedReader.readLine();
             clients.add(this);
-            broadcastMessage("Server: " + name + " has connected");
+            broadcastMessage("Server: " + name + " has connected to chat");
         } catch (IOException e) {
             closeConnection();
         }
@@ -32,7 +32,7 @@ public class ClientHandler implements Runnable{
         while (socket.isConnected()){
             try {
                 incomingMessage = bufferedReader.readLine();
-                broadcastMessage(incomingMessage);
+                messageHandler(incomingMessage);
             } catch (IOException e) {
                 closeConnection();
                 break;
@@ -42,15 +42,37 @@ public class ClientHandler implements Runnable{
 
     private void broadcastMessage(String messageToSend) {
         for (ClientHandler client : clients){
-            try {
-                if (!client.name.equals(this.name)) {
-                    client.bufferedWriter.write(messageToSend);
-                    client.bufferedWriter.newLine();
-                    client.bufferedWriter.flush();
-                }
-            } catch (IOException e){
-                closeConnection();
+            if (!client.name.equals(this.name)) messageSender(client, messageToSend);
+        }
+    }
+
+    private void messageHandler(String incomingMessage){
+        if (incomingMessage.substring(4).startsWith("To:")){
+            String parsedMessage = incomingMessage.substring(7);
+            int splitIndex = parsedMessage.indexOf(" ");
+            String name = parsedMessage.substring(0, splitIndex);
+            sendDirectMessage(name, incomingMessage);
+        } else broadcastMessage(incomingMessage);
+    }
+
+    private void sendDirectMessage(String messageReceiverName, String message){
+        for (ClientHandler client : clients){
+            if (client.name.equals(messageReceiverName)){
+                messageSender(client, message);
+                return;
             }
+        }
+
+        messageSender(this, "Message receiver: " + messageReceiverName + " not found in chat!");
+    }
+
+    private void messageSender(ClientHandler clientHandler, String message){
+        try {
+            clientHandler.bufferedWriter.write(message);
+            clientHandler.bufferedWriter.newLine();
+            clientHandler.bufferedWriter.flush();
+        } catch (IOException e){
+            closeConnection();
         }
     }
 

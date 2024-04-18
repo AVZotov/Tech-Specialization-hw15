@@ -7,6 +7,7 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        System.out.println("FOR PRIVATE MESSAGES PLEASE USE FOLLOWING FORMAT: \"To:receiverName message\"");
         System.out.println("Enter you name: ");
         String name = scanner.nextLine();
 
